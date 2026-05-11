@@ -82,20 +82,37 @@ EOF`;
     "You write cold emails that are human, specific, keyword-optimized, and get replies. Every email mirrors the company's own language naturally."
   );
 
+  console.log("Generate API raw response:", raw.substring(0, 500));
+
   const extract = (label: string, nextLabel: string) => {
     const regex = new RegExp(`${label}:[\\s\\S]*?(?=${nextLabel}:|$)`);
     const match = raw.match(regex);
-    return match ? match[0].replace(`${label}:`, "").trim() : "";
+    const result = match ? match[0].replace(`${label}:`, "").trim() : "";
+    console.log(`Extract "${label}": ${result.substring(0, 100)}`);
+    return result;
   };
 
+    const atsKeywords = extract("ATS_KEYWORDS", "KEYWORDS_USED");
+    const keywordsUsed = extract("KEYWORDS_USED", "SUBJECT_LINES");
+    const subjectLines = extract("SUBJECT_LINES", "EMAIL");
+    const email = extract("EMAIL", "LINKEDIN_NOTE");
+    const linkedinNote = extract("LINKEDIN_NOTE", "COMPANY_TYPE");
+    const companyType = extract("COMPANY_TYPE", "TONE_REASON");
+    const toneReason = extract("TONE_REASON", "ZZZNONE");
+
+    if (!email || !linkedinNote) {
+      console.error("Missing critical fields in response. Raw:", raw);
+      throw new Error("AI response missing email or LinkedIn note. Check API response format.");
+    }
+
     return NextResponse.json({
-      atsKeywords: extract("ATS_KEYWORDS", "KEYWORDS_USED"),
-      keywordsUsed: extract("KEYWORDS_USED", "SUBJECT_LINES"),
-      subjectLines: extract("SUBJECT_LINES", "EMAIL"),
-      email: extract("EMAIL", "LINKEDIN_NOTE"),
-      linkedinNote: extract("LINKEDIN_NOTE", "COMPANY_TYPE"),
-      companyType: extract("COMPANY_TYPE", "TONE_REASON"),
-      toneReason: extract("TONE_REASON", "ZZZNONE"),
+      atsKeywords,
+      keywordsUsed,
+      subjectLines,
+      email,
+      linkedinNote,
+      companyType,
+      toneReason,
     });
   } catch (error) {
     console.error("Generate API error:", error);

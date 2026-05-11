@@ -43,20 +43,29 @@ TOP_TIP:
     "You are a precise ATS analyzer. Be accurate and specific."
   );
 
+    console.log("ATS API raw response:", raw.substring(0, 500));
+
     const extract = (label: string, nextLabel: string) => {
       const regex = new RegExp(`${label}:[\\s\\S]*?(?=${nextLabel}:|$)`);
       const match = raw.match(regex);
-      return match ? match[0].replace(`${label}:`, "").trim() : "";
+      const result = match ? match[0].replace(`${label}:`, "").trim() : "";
+      console.log(`Extract "${label}": ${result.substring(0, 100)}`);
+      return result;
     };
 
     const scoreRaw = extract("SCORE", "MATCHED_KEYWORDS");
     const score = parseInt(scoreRaw.replace(/\D/g, "")) || 0;
+    const matchedKeywords = extract("MATCHED_KEYWORDS", "MISSING_KEYWORDS");
+    const missingKeywords = extract("MISSING_KEYWORDS", "TOP_TIP");
+    const topTip = extract("TOP_TIP", "ZZZNONE");
+
+    console.log("ATS parsed:", { score, matchedKeywords: matchedKeywords.substring(0, 50), missingKeywords: missingKeywords.substring(0, 50) });
 
     return NextResponse.json({
       score,
-      matchedKeywords: extract("MATCHED_KEYWORDS", "MISSING_KEYWORDS"),
-      missingKeywords: extract("MISSING_KEYWORDS", "TOP_TIP"),
-      topTip: extract("TOP_TIP", "ZZZNONE"),
+      matchedKeywords,
+      missingKeywords,
+      topTip,
     });
   } catch (error) {
     console.error("ATS API error:", error);

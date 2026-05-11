@@ -114,6 +114,8 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
+
+
   useEffect(() => {
     let rafId = 0;
     const handleScroll = () => {
