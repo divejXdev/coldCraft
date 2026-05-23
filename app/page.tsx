@@ -155,13 +155,23 @@ export default function Home() {
         }),
       ]);
 
-      const emailData = await emailRes.json();
-      const atsData = await atsRes.json();
+      const emailData = await emailRes.json().catch(() => null);
+      const atsData = await atsRes.json().catch(() => null);
+
+      if (!emailRes.ok) {
+        setError(emailData?.error || "Failed to generate email.");
+        return;
+      }
+      if (!atsRes.ok) {
+        setError(atsData?.error || "Failed to analyze ATS score.");
+        return;
+      }
+
       setResult(emailData);
       setAtsResult(atsData);
       setActiveTab("email");
-    } catch {
-      setError("Something went wrong. Check your API key and try again.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

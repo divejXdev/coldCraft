@@ -5,6 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const { resume, jobDescription, tone, length } = await req.json();
 
+
     if (!resume || !jobDescription) {
       return NextResponse.json(
         { error: "Resume and job description are required" },
@@ -117,9 +118,23 @@ EOF`;
   } catch (error) {
     console.error("Generate API error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    // Handle missing env keys explicitly so the client doesn't fail mysteriously.
+    const missingKey = errorMessage.toLowerCase().includes("missing") && errorMessage.toLowerCase().includes("api key");
+    if (missingKey) {
+      return NextResponse.json(
+        {
+          error:
+            "AI provider API key is missing in this environment. Set GEMINI_API_KEY (preferred) or OPENAI_API_KEY in Vercel.",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: `Failed to generate email: ${errorMessage}` },
       { status: 500 }
     );
   }
 }
+
